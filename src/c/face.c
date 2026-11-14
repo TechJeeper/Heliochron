@@ -207,12 +207,39 @@ static void update_proc(Layer *layer, GContext *ctx) {
   const FaceSettings *cfg = settings_get();
   ThemeColors theme = theme_colors(cfg->theme);
 
-  // True center on round; slight upward nudge on rect when digital captions show.
+  // Caption band first — solar system is laid out entirely above it.
 #if defined(PBL_ROUND)
-  GPoint center = GPoint(bounds.size.w / 2, bounds.size.h / 2);
+  const int caption_h = (cfg->show_digital ? 36 : 0) + (cfg->show_date ? 22 : 0) + 8;
+  const int caption_pad = 18;
+  GFont time_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
+  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  const int time_step = 34;
+#elif defined(PBL_PLATFORM_EMERY)
+  const int caption_h = (cfg->show_digital ? 34 : 0) + (cfg->show_date ? 20 : 0) + 6;
+  const int caption_pad = 4;
+  GFont time_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
+  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  const int time_step = 32;
 #else
-  GPoint center = GPoint(bounds.size.w / 2, bounds.size.h / 2 - (cfg->show_digital ? 6 : 0));
+  const int caption_h = (cfg->show_digital ? 28 : 0) + (cfg->show_date ? 18 : 0) + 4;
+  const int caption_pad = 2;
+  GFont time_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  const int time_step = 26;
 #endif
+
+  const bool show_captions = cfg->show_digital || cfg->show_date;
+  const int caption_top = show_captions
+      ? (bounds.size.h - caption_h - caption_pad)
+      : bounds.size.h;
+  const int time_y = caption_top;
+  const int date_y = cfg->show_digital ? caption_top + time_step : caption_top + 4;
+
+  // Orrery lives in the band above the captions so planets are never covered.
+  const int system_top = PBL_IF_ROUND_ELSE(10, 2);
+  const int system_bottom = show_captions ? (caption_top - 6) : bounds.size.h - 4;
+  const int system_h = system_bottom - system_top;
+  GPoint center = GPoint(bounds.size.w / 2, system_top + system_h / 2);
 
   graphics_context_set_fill_color(ctx, theme.bg);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
@@ -233,13 +260,9 @@ static void update_proc(Layer *layer, GContext *ctx) {
     draw_twinkles(ctx, bounds, theme.accent);
   }
 
-  // Scale orbits to the active display (144/200/260). Leave room for captions.
-  int edge_pad = PBL_IF_ROUND_ELSE(14, 8);
-  if (cfg->show_digital || cfg->show_date) {
-    edge_pad += PBL_IF_ROUND_ELSE(10, 6);
-  }
-  const int max_r = (bounds.size.w < bounds.size.h ? bounds.size.w : bounds.size.h) / 2
-                    - edge_pad;
+  const int half_w = bounds.size.w / 2 - PBL_IF_ROUND_ELSE(12, 6);
+  const int half_h = system_h / 2 - 4;
+  const int max_r = (half_w < half_h ? half_w : half_h);
   int sec_rx = max_r * 38 / 100;
   int min_rx = max_r * 58 / 100;
   int hour_rx = max_r * 82 / 100;
@@ -258,6 +281,7 @@ static void update_proc(Layer *layer, GContext *ctx) {
     draw_orbit_ring(ctx, center, hour_rx, hour_ry, theme.orbit);
   }
 
+  // Optional battery arc — kept inside the system band (not the full dial).
   if (cfg->show_battery_arc) {
     draw_battery_arc(ctx, center, max_r - 2, theme.battery);
   }
@@ -274,31 +298,7 @@ static void update_proc(Layer *layer, GContext *ctx) {
     draw_bitmap_centered(ctx, s_mercury, sec_pt);
   }
 
-  // Captions: large time + high-contrast date. Scrim keeps them readable on nebula.
-#if defined(PBL_ROUND)
-  const int caption_h = (cfg->show_digital ? 36 : 0) + (cfg->show_date ? 22 : 0) + 8;
-  const int caption_top = bounds.size.h - caption_h - 18;
-  const int time_y = caption_top;
-  const int date_y = cfg->show_digital ? caption_top + 34 : caption_top + 4;
-  GFont time_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
-  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-#elif defined(PBL_PLATFORM_EMERY)
-  const int caption_h = (cfg->show_digital ? 34 : 0) + (cfg->show_date ? 20 : 0) + 6;
-  const int caption_top = bounds.size.h - caption_h - 4;
-  const int time_y = caption_top;
-  const int date_y = cfg->show_digital ? caption_top + 32 : caption_top + 2;
-  GFont time_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
-  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-#else
-  const int caption_h = (cfg->show_digital ? 28 : 0) + (cfg->show_date ? 18 : 0) + 4;
-  const int caption_top = bounds.size.h - caption_h - 2;
-  const int time_y = caption_top;
-  const int date_y = cfg->show_digital ? caption_top + 26 : caption_top + 1;
-  GFont time_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-#endif
-
-  if (cfg->show_digital || cfg->show_date) {
+  if (show_captions) {
     graphics_context_set_fill_color(ctx, GColorBlack);
     graphics_fill_rect(ctx,
                        GRect(bounds.size.w / 8, caption_top - 2,

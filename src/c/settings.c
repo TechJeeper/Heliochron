@@ -8,7 +8,8 @@ enum {
   PERSIST_SHOW_SECONDS = 5,
   PERSIST_SHOW_ORBITS = 6,
   PERSIST_SHOW_STARFIELD = 7,
-  PERSIST_SHOW_BATTERY = 8,
+  // Bumped key so older installs that defaulted the arc on pick up the new off default.
+  PERSIST_SHOW_BATTERY = 18,
   PERSIST_TWINKLE = 9,
   PERSIST_THEME = 10,
   PERSIST_HOUR_BODY = 11,
@@ -44,7 +45,7 @@ static void settings_set_defaults(void) {
   s_settings.show_seconds = true;
   s_settings.show_orbits = true;
   s_settings.show_starfield = true;
-  s_settings.show_battery_arc = true;
+  s_settings.show_battery_arc = false;
   s_settings.twinkle = true;
   s_settings.hourly_vibe = false;
   s_settings.theme = THEME_CLASSIC;

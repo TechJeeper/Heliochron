@@ -74,7 +74,7 @@ SCENES = [
         "show_seconds": True,
         "show_orbits": True,
         "show_starfield": True,
-        "show_battery": True,
+        "show_battery": False,
         "battery": 82,
         "elliptical": False,
     },
@@ -90,7 +90,7 @@ SCENES = [
         "show_seconds": True,
         "show_orbits": True,
         "show_starfield": True,
-        "show_battery": True,
+        "show_battery": False,
         "battery": 54,
         "elliptical": False,
     },
@@ -123,7 +123,7 @@ SCENES = [
         "show_seconds": True,
         "show_orbits": True,
         "show_starfield": True,
-        "show_battery": True,
+        "show_battery": True,  # one shot still demos optional arc
         "battery": 33,
         "elliptical": True,
     },
@@ -226,15 +226,31 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
     canvas = Image.new("RGB", (w, h), BLACK)
     draw = ImageDraw.Draw(canvas)
     is_round = w == h
+    show_time = scene["show_digital"]
+    show_date = scene["show_date"]
+    show_captions = show_time or show_date
 
-    cy_nudge = 0 if is_round else (6 if scene["show_digital"] else 0)
-    cx, cy = w // 2, h // 2 - cy_nudge
+    if is_round:
+        time_size, date_size, pad_bottom = 28, 16, 18
+    elif w >= 200:
+        time_size, date_size, pad_bottom = 26, 15, 4
+    else:
+        time_size, date_size, pad_bottom = 22, 14, 2
+
+    block_h = (time_size + 6 if show_time else 0) + (date_size + 4 if show_date else 0) + 8
+    caption_top = h - block_h - pad_bottom if show_captions else h
+
+    # Orrery band sits entirely above the caption box.
+    system_top = 10 if is_round else 2
+    system_bottom = (caption_top - 6) if show_captions else (h - 4)
+    system_h = max(40, system_bottom - system_top)
+    cx = w // 2
+    cy = system_top + system_h // 2
 
     if scene["show_starfield"]:
         sf_path = IMG / ("starfield_round.png" if is_round else "starfield.png")
         sf = Image.open(sf_path).convert("RGB")
         if sf.size != (w, h):
-            # Center native art; do not stretch (matches watchface draw path).
             ox = (w - sf.size[0]) // 2
             oy = (h - sf.size[1]) // 2
             canvas.paste(sf, (ox, oy))
@@ -243,7 +259,9 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
 
     twinkle(draw, w, h, theme["accent"], pulse=scene["second"] % 7)
 
-    max_r = min(w, h) // 2 - (14 if is_round else 8)
+    half_w = w // 2 - (12 if is_round else 6)
+    half_h = system_h // 2 - 4
+    max_r = min(half_w, half_h)
     sec_rx = max_r * 38 // 100
     min_rx = max_r * 58 // 100
     hour_rx = max_r * 82 // 100
@@ -271,7 +289,6 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
             draw.line([prev, p], fill=theme["battery"], width=2)
             prev = p
 
-    # Scale sprites for basalt (down) / gabbro (slightly up)
     if w >= 260:
         scale = 1.15
     elif w >= 200:
@@ -313,23 +330,8 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
             orbit_point(cx, cy, sec_rx, sec_ry, second_angle(scene["second"])),
         )
 
-    # Redraw text atop sprites — large time + bright date on a dark scrim
     draw = ImageDraw.Draw(canvas)
-    show_time = scene["show_digital"]
-    show_date = scene["show_date"]
-    if is_round:
-        time_size, date_size = 28, 16
-        pad_bottom = 18
-    elif w >= 200:
-        time_size, date_size = 26, 15
-        pad_bottom = 4
-    else:
-        time_size, date_size = 22, 14
-        pad_bottom = 2
-
-    block_h = (time_size + 6 if show_time else 0) + (date_size + 4 if show_date else 0) + 8
-    caption_top = h - block_h - pad_bottom
-    if show_time or show_date:
+    if show_captions:
         scrim = [
             w // 8,
             caption_top - 2,

@@ -104,7 +104,7 @@ module.exports = [
         type: 'toggle',
         messageKey: 'ShowBatteryArc',
         label: 'Battery comet arc',
-        defaultValue: true
+        defaultValue: false
       },
       {
         type: 'toggle',

@@ -40,6 +40,12 @@ Designed for Pebble Time 2 and Pebble Round 2; also runs on Pebble Time / Time S
 Solar system watchface — planets keep the hours, minutes, and seconds around a PixelLab sun.
 ```
 
+## Release notes (v1.1.2)
+
+```
+Hide battery arc by default; keep the solar system above the time/date box so planets are never covered.
+```
+
 ## Release notes (v1.1.1)
 
 ```
