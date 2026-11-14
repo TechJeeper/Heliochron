@@ -40,6 +40,12 @@ Designed for Pebble Time 2 and Pebble Round 2; also runs on Pebble Time / Time S
 Solar system watchface — planets keep the hours, minutes, and seconds around a PixelLab sun.
 ```
 
+## Release notes (v1.1.1)
+
+```
+Larger digital time (LECO) and high-contrast date on a dark scrim so captions stay readable on the starfield.
+```
+
 ## Release notes (v1.1.0)
 
 ```

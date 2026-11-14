@@ -233,9 +233,13 @@ static void update_proc(Layer *layer, GContext *ctx) {
     draw_twinkles(ctx, bounds, theme.accent);
   }
 
-  // Scale orbits to the active display (144/200/260).
+  // Scale orbits to the active display (144/200/260). Leave room for captions.
+  int edge_pad = PBL_IF_ROUND_ELSE(14, 8);
+  if (cfg->show_digital || cfg->show_date) {
+    edge_pad += PBL_IF_ROUND_ELSE(10, 6);
+  }
   const int max_r = (bounds.size.w < bounds.size.h ? bounds.size.w : bounds.size.h) / 2
-                    - PBL_IF_ROUND_ELSE(14, 8);
+                    - edge_pad;
   int sec_rx = max_r * 38 / 100;
   int min_rx = max_r * 58 / 100;
   int hour_rx = max_r * 82 / 100;
@@ -270,22 +274,44 @@ static void update_proc(Layer *layer, GContext *ctx) {
     draw_bitmap_centered(ctx, s_mercury, sec_pt);
   }
 
-  // Keep captions inside the circular bezel on Round 2 / Time Round.
+  // Captions: large time + high-contrast date. Scrim keeps them readable on nebula.
 #if defined(PBL_ROUND)
-  const int time_y = bounds.size.h - 56;
-  const int date_y = bounds.size.h - 34;
+  const int caption_h = (cfg->show_digital ? 36 : 0) + (cfg->show_date ? 22 : 0) + 8;
+  const int caption_top = bounds.size.h - caption_h - 18;
+  const int time_y = caption_top;
+  const int date_y = cfg->show_digital ? caption_top + 34 : caption_top + 4;
+  GFont time_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
+  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+#elif defined(PBL_PLATFORM_EMERY)
+  const int caption_h = (cfg->show_digital ? 34 : 0) + (cfg->show_date ? 20 : 0) + 6;
+  const int caption_top = bounds.size.h - caption_h - 4;
+  const int time_y = caption_top;
+  const int date_y = cfg->show_digital ? caption_top + 32 : caption_top + 2;
+  GFont time_font = fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS);
+  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 #else
-  const int time_y = bounds.size.h - 40;
-  const int date_y = bounds.size.h - 22;
+  const int caption_h = (cfg->show_digital ? 28 : 0) + (cfg->show_date ? 18 : 0) + 4;
+  const int caption_top = bounds.size.h - caption_h - 2;
+  const int time_y = caption_top;
+  const int date_y = cfg->show_digital ? caption_top + 26 : caption_top + 1;
+  GFont time_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  GFont date_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 #endif
+
+  if (cfg->show_digital || cfg->show_date) {
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_rect(ctx,
+                       GRect(bounds.size.w / 8, caption_top - 2,
+                             bounds.size.w * 3 / 4, caption_h + 4),
+                       4, GCornersAll);
+  }
 
   if (cfg->show_digital) {
     char time_buf[16];
     format_time(time_buf, sizeof(time_buf));
     graphics_context_set_text_color(ctx, theme.text);
-    graphics_draw_text(ctx, time_buf,
-                       fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
-                       GRect(0, time_y, bounds.size.w, 22),
+    graphics_draw_text(ctx, time_buf, time_font,
+                       GRect(0, time_y, bounds.size.w, 36),
                        GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, NULL);
   }
@@ -293,10 +319,10 @@ static void update_proc(Layer *layer, GContext *ctx) {
   if (cfg->show_date) {
     char date_buf[24];
     format_date(date_buf, sizeof(date_buf));
-    graphics_context_set_text_color(ctx, theme.dim);
-    graphics_draw_text(ctx, date_buf,
-                       fonts_get_system_font(FONT_KEY_GOTHIC_14),
-                       GRect(0, date_y, bounds.size.w, 18),
+    // Use accent (bright) — theme.dim vanishes on the starfield.
+    graphics_context_set_text_color(ctx, theme.accent);
+    graphics_draw_text(ctx, date_buf, date_font,
+                       GRect(0, date_y, bounds.size.w, 22),
                        GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, NULL);
   }

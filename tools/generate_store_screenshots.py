@@ -313,11 +313,34 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
             orbit_point(cx, cy, sec_rx, sec_ry, second_angle(scene["second"])),
         )
 
-    # Redraw text atop sprites
+    # Redraw text atop sprites — large time + bright date on a dark scrim
     draw = ImageDraw.Draw(canvas)
-    time_y = h - 56 if is_round else h - 40
-    date_y = h - 34 if is_round else h - 22
-    if scene["show_digital"]:
+    show_time = scene["show_digital"]
+    show_date = scene["show_date"]
+    if is_round:
+        time_size, date_size = 28, 16
+        pad_bottom = 18
+    elif w >= 200:
+        time_size, date_size = 26, 15
+        pad_bottom = 4
+    else:
+        time_size, date_size = 22, 14
+        pad_bottom = 2
+
+    block_h = (time_size + 6 if show_time else 0) + (date_size + 4 if show_date else 0) + 8
+    caption_top = h - block_h - pad_bottom
+    if show_time or show_date:
+        scrim = [
+            w // 8,
+            caption_top - 2,
+            w * 7 // 8,
+            caption_top + block_h + 2,
+        ]
+        draw.rounded_rectangle(scrim, radius=4, fill=BLACK)
+
+    time_y = caption_top
+    date_y = caption_top + (time_size + 4 if show_time else 4)
+    if show_time:
         hour = scene["hour"] % 12
         if hour == 0:
             hour = 12
@@ -327,18 +350,18 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
             time_str,
             time_y,
             w,
-            font(max(14, w // 11), bold=True),
+            font(time_size, bold=True),
             theme["text"],
         )
 
-    if scene["show_date"]:
+    if show_date:
         draw_text_center(
             draw,
             scene.get("date", ""),
             date_y,
             w,
-            font(max(11, w // 14)),
-            theme["dim"],
+            font(date_size, bold=True),
+            theme["accent"],
         )
 
     # Soft circular crop for Round 2 store shots (no bezel chrome).
