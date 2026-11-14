@@ -11,6 +11,7 @@ Copy these fields into [dev-portal.rebble.io](https://dev-portal.rebble.io/submi
 | Source code | https://github.com/TechJeeper/Heliochron |
 | `.pbw` | `build/Heliochron.pbw` |
 | CloudPebble zip | `dist/Heliochron-cloudpebble.zip` |
+| Platforms | Pebble Time 2 (emery), Time / Time Steel (basalt), Round 2 (gabbro) |
 
 ## Description
 
@@ -30,7 +31,7 @@ A living orrery on your wrist. Heliochron turns time into a solar system: the Su
 • Hourly vibrate
 • Clay phone settings
 
-Designed for Pebble Time 2; also runs on Pebble Time / Time Steel.
+Designed for Pebble Time 2 and Pebble Round 2; also runs on Pebble Time / Time Steel.
 ```
 
 ## Short blurb (optional)
@@ -39,10 +40,10 @@ Designed for Pebble Time 2; also runs on Pebble Time / Time Steel.
 Solar system watchface — planets keep the hours, minutes, and seconds around a PixelLab sun.
 ```
 
-## Release notes (v1.0.0)
+## Release notes (v1.1.0)
 
 ```
-Initial release: orbital solar-system watchface with Clay themes, hour-planet choice, elliptical orbits, and PixelLab art.
+Add Pebble Round 2 (gabbro) support: 260×260 starfield, round-safe layout, and store screenshots.
 ```
 
 ## Screenshots
@@ -57,6 +58,7 @@ python tools/generate_store_screenshots.py
 | --- | --- | --- |
 | basalt (Pebble Time) | 144×168 | `store/screenshots/basalt/` |
 | emery (Pebble Time 2) | 200×228 | `store/screenshots/emery/` |
+| gabbro (Pebble Round 2) | 260×260 | `store/screenshots/gabbro/` |
 
 Five shots per platform:
 
@@ -71,4 +73,4 @@ Five shots per platform:
 - [ ] Screenshots uploaded per platform (up to 5)
 - [ ] Description above on each asset collection
 - [ ] Source URL set to the GitHub repo
-- [ ] Publish `build/Heliochron.pbw` as release 1.0.0
+- [ ] Publish `build/Heliochron.pbw` as release 1.1.0

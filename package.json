@@ -1,7 +1,7 @@
 {
   "name": "heliochron",
   "author": "caffeinegamer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "keywords": [
     "pebble-app",
     "watchface",
@@ -20,7 +20,8 @@
     "enableMultiJS": true,
     "targetPlatforms": [
       "emery",
-      "basalt"
+      "basalt",
+      "gabbro"
     ],
     "watchapp": {
       "watchface": true
@@ -54,7 +55,14 @@
         {
           "type": "bitmap",
           "name": "IMAGE_STARFIELD",
-          "file": "images/starfield.png"
+          "file": "images/starfield.png",
+          "targetPlatforms": ["emery", "basalt"]
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_STARFIELD",
+          "file": "images/starfield_round.png",
+          "targetPlatforms": ["gabbro"]
         },
         {
           "type": "bitmap",

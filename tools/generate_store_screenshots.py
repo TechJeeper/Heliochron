@@ -21,6 +21,7 @@ PLANETS = IMG / "planets"
 PLATFORMS = {
     "basalt": (144, 168, True),
     "emery": (200, 228, True),
+    "gabbro": (260, 260, True),  # Pebble Round 2
 }
 
 BLACK = (0, 0, 0)
@@ -224,17 +225,25 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
     theme = THEMES[scene["theme"]]
     canvas = Image.new("RGB", (w, h), BLACK)
     draw = ImageDraw.Draw(canvas)
+    is_round = w == h
 
-    cy_nudge = 6 if scene["show_digital"] else 0
+    cy_nudge = 0 if is_round else (6 if scene["show_digital"] else 0)
     cx, cy = w // 2, h // 2 - cy_nudge
 
     if scene["show_starfield"]:
-        sf = Image.open(IMG / "starfield.png").convert("RGB").resize((w, h), Image.NEAREST)
-        canvas.paste(sf, (0, 0))
+        sf_path = IMG / ("starfield_round.png" if is_round else "starfield.png")
+        sf = Image.open(sf_path).convert("RGB")
+        if sf.size != (w, h):
+            # Center native art; do not stretch (matches watchface draw path).
+            ox = (w - sf.size[0]) // 2
+            oy = (h - sf.size[1]) // 2
+            canvas.paste(sf, (ox, oy))
+        else:
+            canvas.paste(sf, (0, 0))
 
     twinkle(draw, w, h, theme["accent"], pulse=scene["second"] % 7)
 
-    max_r = min(w, h) // 2 - 8
+    max_r = min(w, h) // 2 - (14 if is_round else 8)
     sec_rx = max_r * 38 // 100
     min_rx = max_r * 58 // 100
     hour_rx = max_r * 82 // 100
@@ -262,8 +271,13 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
             draw.line([prev, p], fill=theme["battery"], width=2)
             prev = p
 
-    # Scale sprites slightly down on basalt
-    scale = 1.0 if w >= 200 else 0.78
+    # Scale sprites for basalt (down) / gabbro (slightly up)
+    if w >= 260:
+        scale = 1.15
+    elif w >= 200:
+        scale = 1.0
+    else:
+        scale = 0.78
     sun = load_sprite("sun.png")
     earth = load_sprite("earth.png")
     mercury = load_sprite("mercury.png")
@@ -301,6 +315,8 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
 
     # Redraw text atop sprites
     draw = ImageDraw.Draw(canvas)
+    time_y = h - 56 if is_round else h - 40
+    date_y = h - 34 if is_round else h - 22
     if scene["show_digital"]:
         hour = scene["hour"] % 12
         if hour == 0:
@@ -309,7 +325,7 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
         draw_text_center(
             draw,
             time_str,
-            h - 40,
+            time_y,
             w,
             font(max(14, w // 11), bold=True),
             theme["text"],
@@ -319,11 +335,19 @@ def render(w: int, h: int, scene: dict) -> Image.Image:
         draw_text_center(
             draw,
             scene.get("date", ""),
-            h - 22,
+            date_y,
             w,
             font(max(11, w // 14)),
             theme["dim"],
         )
+
+    # Soft circular crop for Round 2 store shots (no bezel chrome).
+    if is_round:
+        mask = Image.new("L", (w, h), 0)
+        ImageDraw.Draw(mask).ellipse((0, 0, w - 1, h - 1), fill=255)
+        rounded = Image.new("RGB", (w, h), BLACK)
+        rounded.paste(canvas, (0, 0), mask)
+        return rounded
 
     return canvas
 

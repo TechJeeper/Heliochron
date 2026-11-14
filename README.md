@@ -52,7 +52,9 @@ python tools/generate_store_screenshots.py
 
 - Import zip: `dist/Heliochron-cloudpebble.zip`
 - Store copy + screenshot notes: [`STORE.md`](STORE.md)
-- Screenshots: `store/screenshots/{basalt,emery}/`
+- Screenshots: `store/screenshots/{basalt,emery,gabbro}/`
+
+Targets **Pebble Time 2** (emery), **Pebble Time / Time Steel** (basalt), and **Pebble Round 2** (gabbro).
 
 ## Name note
 

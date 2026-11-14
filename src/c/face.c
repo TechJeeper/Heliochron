@@ -206,22 +206,36 @@ static void update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   const FaceSettings *cfg = settings_get();
   ThemeColors theme = theme_colors(cfg->theme);
+
+  // True center on round; slight upward nudge on rect when digital captions show.
+#if defined(PBL_ROUND)
+  GPoint center = GPoint(bounds.size.w / 2, bounds.size.h / 2);
+#else
   GPoint center = GPoint(bounds.size.w / 2, bounds.size.h / 2 - (cfg->show_digital ? 6 : 0));
+#endif
 
   graphics_context_set_fill_color(ctx, theme.bg);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   if (cfg->show_starfield && s_starfield) {
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-    graphics_draw_bitmap_in_rect(ctx, s_starfield, bounds);
+    GSize sf = gbitmap_get_bounds(s_starfield).size;
+    // Draw at native size centered — Pebble does not upscale bitmaps.
+    GRect dest = GRect(
+        (bounds.size.w - sf.w) / 2,
+        (bounds.size.h - sf.h) / 2,
+        sf.w,
+        sf.h);
+    graphics_draw_bitmap_in_rect(ctx, s_starfield, dest);
   }
 
   if (cfg->twinkle) {
     draw_twinkles(ctx, bounds, theme.accent);
   }
 
-  // Orbit radii sized for Pebble Time 2 (200x228) with headroom for basalt.
-  const int max_r = (bounds.size.w < bounds.size.h ? bounds.size.w : bounds.size.h) / 2 - 8;
+  // Scale orbits to the active display (144/200/260).
+  const int max_r = (bounds.size.w < bounds.size.h ? bounds.size.w : bounds.size.h) / 2
+                    - PBL_IF_ROUND_ELSE(14, 8);
   int sec_rx = max_r * 38 / 100;
   int min_rx = max_r * 58 / 100;
   int hour_rx = max_r * 82 / 100;
@@ -256,13 +270,22 @@ static void update_proc(Layer *layer, GContext *ctx) {
     draw_bitmap_centered(ctx, s_mercury, sec_pt);
   }
 
+  // Keep captions inside the circular bezel on Round 2 / Time Round.
+#if defined(PBL_ROUND)
+  const int time_y = bounds.size.h - 56;
+  const int date_y = bounds.size.h - 34;
+#else
+  const int time_y = bounds.size.h - 40;
+  const int date_y = bounds.size.h - 22;
+#endif
+
   if (cfg->show_digital) {
     char time_buf[16];
     format_time(time_buf, sizeof(time_buf));
     graphics_context_set_text_color(ctx, theme.text);
     graphics_draw_text(ctx, time_buf,
                        fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
-                       GRect(0, bounds.size.h - 40, bounds.size.w, 22),
+                       GRect(0, time_y, bounds.size.w, 22),
                        GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, NULL);
   }
@@ -273,14 +296,19 @@ static void update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_text_color(ctx, theme.dim);
     graphics_draw_text(ctx, date_buf,
                        fonts_get_system_font(FONT_KEY_GOTHIC_14),
-                       GRect(0, bounds.size.h - 22, bounds.size.w, 18),
+                       GRect(0, date_y, bounds.size.w, 18),
                        GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, NULL);
   }
 
   if (!s_bt_connected) {
     graphics_context_set_fill_color(ctx, theme.accent);
+#if defined(PBL_ROUND)
+    // Near top-center — corners are clipped on round displays.
+    graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, 16), 3);
+#else
     graphics_fill_circle(ctx, GPoint(bounds.size.w - 8, 8), 3);
+#endif
   }
 }
 

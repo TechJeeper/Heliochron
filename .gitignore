@@ -6,3 +6,5 @@ __pycache__/
 *.pbw
 resources/images/**/*_raw.png
 resources/images/starfield_raw.png
+# Keep tagged SDK variants; ignore duplicate tooling aliases if regenerated
+# (starfield.png / starfield_round.png are committed as build + screenshot sources)
