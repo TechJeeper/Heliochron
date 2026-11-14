@@ -1,0 +1,92 @@
+{
+  "name": "heliochron",
+  "author": "caffeinegamer",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app",
+    "watchface",
+    "solar-system",
+    "planets",
+    "astronomy"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.1.0"
+  },
+  "pebble": {
+    "displayName": "Heliochron",
+    "uuid": "e7e94981-c59f-43c8-8941-84a47d81210f",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "basalt"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "capabilities": [
+      "configurable"
+    ],
+    "messageKeys": [
+      "TimeFormat",
+      "LeadingZero",
+      "ShowDigital",
+      "ShowDate",
+      "ShowSeconds",
+      "ShowOrbits",
+      "ShowStarfield",
+      "ShowBatteryArc",
+      "Twinkle",
+      "Theme",
+      "HourBody",
+      "OrbitStyle",
+      "HourlyVibe"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "bitmap",
+          "name": "IMAGE_MENU_ICON",
+          "file": "images/menu_icon.png",
+          "menuIcon": true
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_STARFIELD",
+          "file": "images/starfield.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_SUN",
+          "file": "images/planets/sun.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_MERCURY",
+          "file": "images/planets/mercury.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_EARTH",
+          "file": "images/planets/earth.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_MARS",
+          "file": "images/planets/mars.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_SATURN",
+          "file": "images/planets/saturn.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "IMAGE_JUPITER",
+          "file": "images/planets/jupiter.png"
+        }
+      ]
+    }
+  }
+}
